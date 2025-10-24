@@ -19,6 +19,20 @@ resource "ibm_cos_bucket" "vibe_bucket" {
   region_location      = var.region
 }
 
+resource "ibm_cos_bucket_object" "index_html" {
+  bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
+  bucket_location = var.region
+  key             = var.website_index
+  content         = file("${path.module}/sample-app/index.html")
+}
+
+resource "ibm_cos_bucket_object" "error_html" {
+  bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
+  bucket_location = var.region
+  key             = var.website_error
+  content         = file("${path.module}/sample-app/404.html")
+}
+
 resource "ibm_cos_bucket_website_configuration" "vibe_bucket_website" {
   bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
   bucket_location = var.region
@@ -33,34 +47,27 @@ resource "ibm_cos_bucket_website_configuration" "vibe_bucket_website" {
     }
   }
 
-  # Add this block to fix the race condition
+  # Fixes race condition
   depends_on = [
     ibm_cos_bucket_object.index_html,
     ibm_cos_bucket_object.error_html
   ]
 }
 
-resource "ibm_cos_bucket_object" "index_html" {
-  bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
-  bucket_location = var.region
-  key             = var.website_index
-  content         = file("${path.module}/sample-app/index.html")
-}
+# Fixes 403 AccessDenied error
+resource "ibm_iam_authorization_policy" "vibe_public_access" {
+  source_service_name         = "cloud-object-storage"
+  target_service_name         = "cloud-object-storage"
+  target_resource_instance_id = ibm_resource_instance.cos_instance.id
+  roles                       = ["ContentReader"]
+  access_group_id             = "public"
 
-resource "ibm_cos_bucket_public_access" "vibe_bucket_public_access" {
-  bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
-  bucket_location = var.region
-  public_access   = "public-read"
-  
-  # Ensure the bucket exists before setting its access policy
-  depends_on = [
-    ibm_cos_bucket.vibe_bucket
-  ]
-}
-
-resource "ibm_cos_bucket_object" "error_html" {
-  bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
-  bucket_location = var.region
-  key             = var.website_error
-  content         = file("${path.module}/sample-app/404.html")
+  resource_attributes {
+    name  = "resourceType"
+    value = "bucket"
+  }
+  resource_attributes {
+    name  = "resource"
+    value = ibm_cos_bucket.vibe_bucket.bucket_name
+  }
 }

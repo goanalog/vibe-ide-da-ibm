@@ -33,6 +33,19 @@ resource "ibm_cos_bucket_object" "error_html" {
   content         = file("${path.module}/sample-app/404.html")
 }
 
+# Fixes 403 AccessDenied error using the correct resource for public access
+resource "ibm_iam_access_group_policy" "vibe_bucket_public_read_policy" {
+  access_group_id = "AccessGroupId-PublicAccess" # ID for the built-in Public Access group
+  roles           = ["Content Reader"] # Corrected Role Name
+
+  resources {
+    service               = "cloud-object-storage"
+    resource_instance_id  = ibm_resource_instance.cos_instance.id
+    resource_type         = "bucket"
+    resource              = ibm_cos_bucket.vibe_bucket.bucket_name
+  }
+}
+
 resource "ibm_cos_bucket_website_configuration" "vibe_bucket_website" {
   bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
   bucket_location = var.region
@@ -47,22 +60,10 @@ resource "ibm_cos_bucket_website_configuration" "vibe_bucket_website" {
     }
   }
 
-  # Fixes race condition
+  # Add dependency on policy creation as well to possibly avoid race condition
   depends_on = [
     ibm_cos_bucket_object.index_html,
-    ibm_cos_bucket_object.error_html
+    ibm_cos_bucket_object.error_html,
+    ibm_iam_access_group_policy.vibe_bucket_public_read_policy # Added dependency
   ]
-}
-
-# Fixes 403 AccessDenied error using the correct resource for public access
-resource "ibm_iam_access_group_policy" "vibe_bucket_public_read_policy" {
-  access_group_id = "AccessGroupId-PublicAccess" # ID for the built-in Public Access group
-  roles           = ["ContentReader"]
-
-  resources {
-    service               = "cloud-object-storage"
-    resource_instance_id  = ibm_resource_instance.cos_instance.id
-    resource_type         = "bucket"
-    resource              = ibm_cos_bucket.vibe_bucket.bucket_name
-  }
 }

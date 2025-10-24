@@ -1,0 +1,10 @@
+{
+  "name": "manifest-vibe",
+  "version": "1.0.0",
+  "description": "IBM Cloud Function to push HTML to IBM COS with automatic service binding",
+  "main": "manifest_vibe.js",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "ibm-cos-sdk": "^1.14.1"
+  }
+}

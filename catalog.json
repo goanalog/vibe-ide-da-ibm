@@ -1,0 +1,10 @@
+{
+  "name": "vibe-ide-da-ibm-cloud-manifest",
+  "version": "0.1.0",
+  "runtime": "nodejs:20",
+  "entry_action": "manifest_vibe",
+  "resources": [
+    "cloud-object-storage"
+  ],
+  "about": "Minimal, unbreakable manifest function with automatic COS binding"
+}

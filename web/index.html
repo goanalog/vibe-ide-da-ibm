@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vibe Manifest</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
+    button { padding: .7rem 1rem; border-radius: 12px; border: 1px solid #ccc; cursor: pointer; }
+    .log { margin-top: 1rem; white-space: pre-wrap; background:#f7f7f7; padding:1rem; border-radius:12px; }
+    input, textarea { width: 100%; padding: .6rem; border-radius: 10px; border: 1px solid #ddd; margin: .4rem 0 1rem; }
+    .row { display:flex; gap:1rem; align-items:center; }
+    .row > * { flex: 1; }
+  </style>
+</head>
+<body>
+  <h1>Vibe Manifest</h1>
+  <div class="row">
+    <input id="key" placeholder="key (e.g., index.html)" value="index.html"/>
+    <input id="bucket" placeholder="COS bucket name"/>
+  </div>
+  <textarea id="html" rows="8"><!doctype html><html><body><h1>Vibe!</h1></body></html></textarea>
+  <button id="go">Manifest Vibe</button>
+  <div class="log" id="log"></div>
+  <script src="./js/api.js"></script>
+</body>
+</html>

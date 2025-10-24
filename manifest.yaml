@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: VibeManifest
+metadata:
+  name: vibe-ide-da-ibm-cloud-manifest
+spec:
+  entryAction: manifest_vibe
+  requires:
+    - cloud-object-storage
+  runtime: nodejs:20

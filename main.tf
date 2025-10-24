@@ -1,6 +1,6 @@
 
 ###############################################################################
-# main.tf — v11: jsonencode syntax for parameters/annotations
+# main.tf — v12: parameters and annotations moved inside exec block
 ###############################################################################
 
 resource "random_id" "suffix" {
@@ -48,22 +48,22 @@ resource "ibm_function_action" "vibe_push" {
   name      = "vibe-push"
   namespace = ibm_function_namespace.vibe_ns.name
 
-  parameters = jsonencode({
-    bucket = ibm_cos_bucket.vibe_bucket.bucket_name
-    region = var.region
-  })
-
   exec {
     kind = "python:3.11"
     code = file("${path.module}/vibe_push.py")
     main = "main"
-  }
 
-  annotations = jsonencode({
-    "web-export" = true
-    "final"      = true
-    "raw-http"   = false
-  })
+    parameters = jsonencode({
+      bucket = ibm_cos_bucket.vibe_bucket.bucket_name
+      region = var.region
+    })
+
+    annotations = jsonencode({
+      "web-export" = true
+      "final"      = true
+      "raw-http"   = false
+    })
+  }
 
   publish = true
 }

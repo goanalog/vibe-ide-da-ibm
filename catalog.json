@@ -1,0 +1,28 @@
+{
+  "id": "vibe-ide-da-ibm-project-update",
+  "name": "Vibe IDE — Cloud Native",
+  "type": "terraform",
+  "project_compatible": true,
+  "primary_output": "vibe_ide_url",
+  "metadata": {
+    "long_description": "A browser-based Vibe IDE that lives inside IBM Cloud Object Storage. Edit, preview, and export static sites directly from the cloud, then push updates back into your IBM Cloud Project for redeployment.",
+    "tags": [
+      "vibe",
+      "ide",
+      "creative-coding",
+      "object-storage",
+      "deployable-architecture",
+      "ibm-cloud",
+      "static-site"
+    ],
+    "documentation_url": "https://cloud.ibm.com/docs/ibm-cloud-projects",
+    "support_url": "https://cloud.ibm.com/unifiedsupport",
+    "license": "Apache-2.0"
+  },
+  "template": {
+    "main": "main.tf",
+    "variables": "variables.tf",
+    "outputs": "main.tf",
+    "readme": "README.md"
+  }
+}

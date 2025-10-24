@@ -45,6 +45,7 @@ resource "ibm_cos_bucket_object" "index_html" {
   bucket_location = var.region
   key             = var.website_index
   content         = file("${path.module}/sample-app/index.html")
+  acl             = "public-read"
 }
 
 resource "ibm_cos_bucket_object" "error_html" {

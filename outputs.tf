@@ -7,9 +7,9 @@ output "primaryoutputlink" {
   description = "Vibe IDE URL"
 }
 
-output "code_engine_url" {
-  value       = ibm_code_engine_project.vibe_ce_project.status_url
-  description = "Code Engine Backend URL"
+output "code_engine_project_name" {
+  value       = ibm_code_engine_project.vibe_ce_project.name
+  description = "Name of the Code Engine project created for backend extensions"
 }
 
 output "vibe_bucket_name" {

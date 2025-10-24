@@ -33,12 +33,13 @@ resource "ibm_cos_bucket" "vibe_bucket" {
   region_location      = var.region
   storage_class        = "standard"
   force_delete         = true
+}
 
-  website {
-    enable             = true
-    main_document      = "index.html"
-    error_document     = "index.html"
-  }
+# Enable static website hosting
+resource "ibm_cos_bucket_website_configuration" "vibe_site" {
+  bucket_crn     = ibm_cos_bucket.vibe_bucket.crn
+  main_document  = "index.html"
+  error_document = "index.html"
 }
 
 ###############################################################################
@@ -56,10 +57,10 @@ resource "ibm_code_engine_project" "vibe_ce_project" {
 resource "null_resource" "render_env" {
   provisioner "local-exec" {
     environment = {
-      CODE_ENGINE_URL = "${ibm_code_engine_project.vibe_ce_project.status_url}"
+      CODE_ENGINE_PROJECT = ibm_code_engine_project.vibe_ce_project.name
     }
     command = <<EOT
-      echo "Rendering environment with CODE_ENGINE_URL=${ibm_code_engine_project.vibe_ce_project.status_url}"
+      echo "Rendering environment with CODE_ENGINE_PROJECT=${ibm_code_engine_project.vibe_ce_project.name}"
     EOT
   }
 }

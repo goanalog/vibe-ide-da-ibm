@@ -1,23 +1,29 @@
 variable "region" {
-  description = "IBM Cloud region (e.g., us-south)"
+  description = "IBM Cloud region for COS and Code Engine."
   type        = string
   default     = "us-south"
 }
 
-variable "bucket_prefix" {
-  description = "Prefix for the COS bucket"
+# Optional Slack notifications (can be left blank)
+variable "slack_webhook_url" {
+  description = "Optional Slack incoming webhook URL for Vibe notifications."
   type        = string
-  default     = "vibe-bucket"
+  default     = ""
+}
+variable "slack_channel" {
+  description = "Optional Slack channel name (e.g. #vibe-alerts)."
+  type        = string
+  default     = ""
 }
 
-variable "website_index" {
-  description = "Index file for website hosting"
+# Project context (Projects UI can inject these automatically)
+variable "ibm_project_id" {
+  description = "IBM Cloud Project ID (auto-injected by Projects)."
   type        = string
-  default     = "index.html"
+  default     = ""
 }
-
-variable "website_error" {
-  description = "Error file for website hosting"
+variable "ibm_project_name" {
+  description = "IBM Cloud Project Name (auto-injected by Projects)."
   type        = string
-  default     = "404.html"
+  default     = ""
 }

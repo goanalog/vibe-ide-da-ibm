@@ -1,69 +1,222 @@
-resource "ibm_resource_instance" "cos_instance" {
-  name     = "vibe-instance"
-  service  = "cloud-object-storage"
-  plan     = "lite"
-  location = "global"
+locals {
+  rg_name      = "Default"
+  name_prefix  = "vibe"
+  tags         = ["vibe-coding","vibe-ide","deployable-architecture","ibm-cloud-projects","code-engine","platform-design"]
+  s3_endpoint  = "s3.${var.region}.cloud-object-storage.appdomain.cloud"
+  s3_web_ep    = "s3-web.${var.region}.cloud-object-storage.appdomain.cloud"
 }
 
 resource "random_string" "suffix" {
-  length  = 6
+  length  = 3
   upper   = false
   special = false
 }
 
-resource "ibm_cos_bucket" "vibe_bucket" {
-  bucket_name          = "${var.bucket_prefix}-${random_string.suffix.result}"
-  resource_instance_id = ibm_resource_instance.cos_instance.id
-  storage_class        = "standard"
-  force_delete         = true
-  region_location      = var.region
+# ---------------- COS Instance + Bucket ----------------
+resource "ibm_resource_instance" "cos_instance" {
+  name              = "${local.name_prefix}-instance-${random_string.suffix.result}"
+  service           = "cloud-object-storage"
+  plan              = "lite"
+  location          = "global"
+  resource_group    = local.rg_name
+  tags              = local.tags
 }
 
+# HMAC credentials for app access
+resource "ibm_resource_key" "cos_hmac" {
+  name                 = "${local.name_prefix}-hmac-${random_string.suffix.result}"
+  role                 = "Writer"
+  resource_instance_id = ibm_resource_instance.cos_instance.id
+  parameters           = { HMAC = true }
+}
+
+resource "ibm_cos_bucket" "vibe_bucket" {
+  bucket_name          = "${local.name_prefix}-bucket-${random_string.suffix.result}"
+  resource_instance_id = ibm_resource_instance.cos_instance.id
+  region_location      = var.region
+  endpoint_type        = "public"
+  storage_class        = "standard"
+  force_delete         = true
+  tags                 = local.tags
+}
+
+# Static website config
+resource "ibm_cos_bucket_website_configuration" "vibe_bucket_website" {
+  bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
+  bucket_location = var.region
+  endpoint_type   = "public"
+
+  website_configuration {
+    index_document { suffix = "index.html" }
+    error_document { key    = "404.html" }
+  }
+}
+
+# Upload index.html and 404.html
 resource "ibm_cos_bucket_object" "index_html" {
   bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
   bucket_location = var.region
-  key             = var.website_index
-  content         = file("${path.module}/sample-app/index.html")
+  endpoint_type   = "public"
+  key             = "index.html"
+  content_type    = "text/html"
+  content         = file("${path.module}/site/index.html")
+  force_delete    = true
 }
 
 resource "ibm_cos_bucket_object" "error_html" {
   bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
   bucket_location = var.region
-  key             = var.website_error
-  content         = file("${path.module}/sample-app/404.html")
+  endpoint_type   = "public"
+  key             = "404.html"
+  content_type    = "text/html"
+  content         = "<!-- 404 - Not Found -->"
+  force_delete    = true
 }
 
-# Fixes 403 AccessDenied error using the correct resource for public access
-resource "ibm_iam_access_group_policy" "vibe_bucket_public_read_policy" {
-  access_group_id = "AccessGroupId-PublicAccess" # ID for the built-in Public Access group
-  roles           = ["Content Reader"] # Corrected Role Name
+# Public access group policy (Object Reader / Content Reader)
+resource "ibm_iam_access_group_policy" "public_bucket_read" {
+  access_group_id    = "AccessGroupId-PublicAccess"
+  account_management = false
+  roles              = ["Content Reader"]
 
   resources {
-    service               = "cloud-object-storage"
-    resource_instance_id  = ibm_resource_instance.cos_instance.id
-    resource_type         = "bucket"
-    resource              = ibm_cos_bucket.vibe_bucket.bucket_name
+    service              = "cloud-object-storage"
+    resource_type        = "bucket"
+    resource             = ibm_cos_bucket.vibe_bucket.bucket_name
+    resource_instance_id = ibm_resource_instance.cos_instance.id
   }
 }
 
-resource "ibm_cos_bucket_website_configuration" "vibe_bucket_website" {
+# ---------------- Code Engine Backend ----------------
+resource "ibm_code_engine_project" "vibe_ce" {
+  name           = "${local.name_prefix}-ce-${random_string.suffix.result}"
+  resource_group = local.rg_name
+  tags           = local.tags
+}
+
+# Secret with COS HMAC credentials for the app
+resource "ibm_code_engine_secret" "cos_hmac_secret" {
+  project_id = ibm_code_engine_project.vibe_ce.id
+  name       = "${local.name_prefix}-cos-hmac-${random_string.suffix.result}"
+  format     = "generic"
+  data = {
+    COS_HMAC_ACCESS_KEY_ID     = ibm_resource_key.cos_hmac.credentials["cos_hmac_keys.access_key_id"]
+    COS_HMAC_SECRET_ACCESS_KEY = ibm_resource_key.cos_hmac.credentials["cos_hmac_keys.secret_access_key"]
+    COS_S3_ENDPOINT            = local.s3_endpoint
+  }
+}
+
+# Use a prebuilt public image by default (hybrid: can be swapped by maintainers)
+locals {
+  ce_image = "icr.io/codeengine/vibe-ce-service:latest"
+}
+
+resource "ibm_code_engine_app" "vibe_app" {
+  project_id   = ibm_code_engine_project.vibe_ce.id
+  name         = "${local.name_prefix}-app-${random_string.suffix.result}"
+  image_reference = local.ce_image
+  image_port     = 8080
+  concurrency    = 10
+  scale_min_instances = 0
+  scale_max_instances = 3
+  managed_domain_mappings = "local_public"
+  run_env_variables = {
+    COS_BUCKET      = ibm_cos_bucket.vibe_bucket.bucket_name
+    COS_REGION      = var.region
+    PROJECT_ID      = var.ibm_project_id
+    PROJECT_NAME    = var.ibm_project_name
+  }
+  run_env_from_secret_references = [
+    { name = ibm_code_engine_secret.cos_hmac_secret.name, prefix = "" }
+  ]
+  tags = local.tags
+}
+
+# Generate env.js for the site with live CE URL
+resource "local_file" "vibe_env_js" {
+  filename = "${path.module}/site/env.deploy.js"
+  content  = <<EOT
+// Auto-generated by Terraform — do not edit directly
+window.VIBE_CONFIG = {{
+  CODE_ENGINE_URL: "{app_url}",
+  COS_WEBSITE_URL: "https://{bucket}.s3-web.{region}.cloud-object-storage.appdomain.cloud",
+  PROJECT_NAME: "{pname}",
+  PROJECT_ID: "{pid}"
+}};
+EOT
+  # populated via a replace later in null_resource
+}
+
+# Render the env.js content using depends_on and templatefile-like interpolation
+resource "null_resource" "render_env" {
+  depends_on = [ibm_code_engine_app.vibe_app]
+  triggers = { app_url = ibm_code_engine_app.vibe_app.endpoint, bucket = ibm_cos_bucket.vibe_bucket.bucket_name, region = var.region, pname = var.ibm_project_name, pid = var.ibm_project_id }
+  provisioner "local-exec" {
+    command = <<EOC
+app_url="${ibm_code_engine_app.vibe_app.endpoint}"
+bucket="${ibm_cos_bucket.vibe_bucket.bucket_name}"
+region="${var.region}"
+pname="${var.ibm_project_name}"
+pid="${var.ibm_project_id}"
+cat > "${path.module}/site/env.js" <<JS
+// Auto-generated by Terraform — do not edit directly
+window.VIBE_CONFIG = {{
+  CODE_ENGINE_URL: "${{app_url}}",
+  COS_WEBSITE_URL: "https://${{bucket}}.s3-web.${{region}}.cloud-object-storage.appdomain.cloud",
+  PROJECT_NAME: "${{pname}}",
+  PROJECT_ID: "${{pid}}"
+}};
+JS
+EOC
+  }
+}
+
+# Upload the generated env.js into the bucket
+resource "ibm_cos_bucket_object" "env_js" {
+  depends_on     = [null_resource "render_env"]
   bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
   bucket_location = var.region
+  endpoint_type   = "public"
+  key             = "env.js"
+  content_type    = "application/javascript"
+  content         = file("${path.module}/site/env.js")
+  force_delete    = true
+}
 
-  website_configuration {
-    index_document {
-      suffix = var.website_index
-    }
+# ---------------- Optional Slack via Event Notifications (skippable) ----------------
+resource "ibm_resource_instance" "notifications" {
+  count            = length(var.slack_webhook_url) > 0 ? 1 : 0
+  name             = "${local.name_prefix}-en-${random_string.suffix.result}"
+  service          = "event-notifications"
+  plan             = "lite"
+  location         = var.region
+  resource_group   = local.rg_name
+  tags             = local.tags
+}
 
-    error_document {
-      key = var.website_error
-    }
-  }
+resource "ibm_event_notifications_topic" "vibe_updates" {
+  count         = length(var.slack_webhook_url) > 0 ? 1 : 0
+  instance_guid = ibm_resource_instance.notifications[0].guid
+  name          = "Vibe Updates"
+  description   = "Topic for Vibe notifications"
+}
 
-  # Add dependency on policy creation as well to possibly avoid race condition
-  depends_on = [
-    ibm_cos_bucket_object.index_html,
-    ibm_cos_bucket_object.error_html,
-    ibm_iam_access_group_policy.vibe_bucket_public_read_policy # Added dependency
-  ]
+resource "ibm_event_notifications_destination" "slack" {
+  count         = length(var.slack_webhook_url) > 0 ? 1 : 0
+  instance_guid = ibm_resource_instance.notifications[0].guid
+  name          = "vibe-slack"
+  type          = "slack"
+  description   = "Slack destination for Vibe notifications"
+  config        = jsonencode({ webhook_url = var.slack_webhook_url, channel = var.slack_channel })
+}
+
+resource "ibm_event_notifications_subscription" "vibe_slack_sub" {
+  count            = length(var.slack_webhook_url) > 0 ? 1 : 0
+  instance_guid    = ibm_resource_instance.notifications[0].guid
+  name             = "Vibe Slack Alerts"
+  description      = "Sends 'Your Vibe Is Live' messages to Slack"
+  topic_id         = ibm_event_notifications_topic.vibe_updates[0].id
+  destination_type = "slack"
+  destination_id   = ibm_event_notifications_destination.slack[0].id
+  topic_filters    = ["*"]
 }

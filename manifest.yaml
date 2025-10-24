@@ -1,6 +1,0 @@
-
-name: vibe-ide-da
-version: 1.0.1
-description: Deploy a live Vibe IDE with COS static hosting and a push-to-live IBM Cloud Function.
-type: terraform
-primary_output: primaryoutputlink

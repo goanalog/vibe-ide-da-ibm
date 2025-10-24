@@ -7,7 +7,7 @@ variable "region" {
 variable "bucket_prefix" {
   description = "Prefix for the COS bucket"
   type        = string
-  default     "vibe-bucket"
+  default     = "vibe-bucket"  <--- Add "=" here
 }
 
 variable "website_index" {

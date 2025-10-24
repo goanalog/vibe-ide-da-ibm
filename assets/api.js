@@ -1,1 +1,0 @@
-console.log('vibe api stable');

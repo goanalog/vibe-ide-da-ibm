@@ -1,1 +1,0 @@
-window.__VIBE_ENV__={note:'stable env'};

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vibe IDE — IBM Cloud</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600;700&family=IBM+Plex+Serif:wght@200;300;400&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: radial-gradient(1200px 600px at 10% -20%, #7C3AED 0%, rgba(124,58,237,0) 60%),
+            radial-gradient(1400px 800px at 90% -10%, #06B6D4 0%, rgba(6,182,212,0) 60%),
+            radial-gradient(1000px 600px at 50% 120%, #22C55E 0%, rgba(34,197,94,0) 60%),
+            linear-gradient(180deg, #0b1020 0%, #0a0f1c 100%);
+      --card: rgba(255,255,255,0.06);
+      --ink: #e8edff;
+      --ink-dim: #99a2c2;
+      --accent: #9b87f5;
+    }
+    *{ box-sizing: border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: "IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color:var(--ink);
+      background: var(--bg);
+      background-attachment: fixed;
+    }
+    header{
+      display:flex; gap:16px; align-items:center; justify-content:space-between;
+      padding:24px 28px; position:sticky; top:0; backdrop-filter: blur(12px);
+      background: linear-gradient(180deg, rgba(10,15,28,0.8), rgba(10,15,28,0.4));
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .brand{ display:flex; gap:14px; align-items:center; }
+    .ibm-mark{
+      width:28px; height:28px; border-radius:8px;
+      background: conic-gradient(from 220deg, #3a86ff, #a78bfa, #22c55e, #06b6d4, #3a86ff);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.15) inset, 0 10px 30px rgba(0,0,0,.35);
+    }
+    h1{ margin:0; font-size:18px; letter-spacing:.2px; font-weight:700 }
+    .sub{ color:var(--ink-dim); font-size:12px; margin-top:2px }
+    .cta-row{ display:flex; gap:10px; align-items:center }
+    button{
+      appearance:none; border:none; cursor:pointer; padding:10px 14px;
+      border-radius:12px; color:#0b1020; background:#e8edff; font-weight:700;
+      transition: transform .1s ease, box-shadow .2s ease, opacity .2s;
+      box-shadow: 0 6px 24px rgba(0,0,0,.25);
+    }
+    button.secondary{ background:transparent; color:var(--ink);
+      border:1px solid rgba(232,237,255,.25) }
+    button:disabled{ opacity:.6; cursor:not-allowed }
+    main{ display:grid; grid-template-columns: 1fr 1fr; gap:20px; padding:24px; }
+    .panel{
+      background: var(--card); border: 1px solid rgba(255,255,255,0.08);
+      border-radius:20px; overflow:hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+    }
+    .panel h2{ margin:0; padding:16px 16px 12px 16px; font-size:14px; color:#cbd4ff; letter-spacing:.3px }
+    .panel .body{ padding:16px }
+    textarea{
+      width:100%; height:65vh; background:transparent; color:var(--ink);
+      border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:16px;
+      resize:vertical; font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      line-height:1.4; font-size:14px;
+    }
+    iframe{
+      width:100%; height:65vh; background:white; border-radius:14px; border:none;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+    }
+    footer{
+      padding:18px 24px; font-size:12px; color:var(--ink-dim);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .badge{ padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.16); }
+    .plex-serif{ font-family:"IBM Plex Serif", Georgia, serif; font-weight:300 }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="ibm-mark" aria-hidden="true"></div>
+      <div>
+        <h1>Vibe IDE</h1>
+        <div class="sub plex-serif">co‑created with IBM Cloud Platform Design</div>
+      </div>
+    </div>
+    <div class="cta-row">
+      <button id="btnPreview" class="secondary" title="Preview locally">Preview</button>
+      <button id="btnExport" class="secondary" title="Download zip">Download</button>
+      <button id="btnPush" title="Publish to IBM Cloud">Push to Cloud</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Editor</h2>
+      <div class="body">
+        <textarea id="editor" spellcheck="false"></textarea>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Preview</h2>
+      <div class="body">
+        <iframe id="preview" srcdoc="Loading…"></iframe>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span class="badge">Vibe IDE DA · static</span>
+    <span>Typography: IBM Plex Sans &amp; Plex Serif</span>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.appid.cloud.ibm.com/appid-0.3.0.min.js"></script>
+  <script src="assets/env.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

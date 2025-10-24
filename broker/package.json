@@ -1,0 +1,16 @@
+{
+  "name": "vibe-broker",
+  "version": "1.0.0",
+  "description": "Secure broker for Vibe IDE",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.3.1",
+    "ibm-cos-sdk": "^2.14.0",
+    "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.1.0"
+  }
+}

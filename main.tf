@@ -1,66 +1,84 @@
 ###############################################################################
-# Vibe IDE — Deployable Architecture (IBM Cloud)
-# Modular structure (no duplicate providers/outputs)
+# Main — Vibe IDE Deployable Architecture
 ###############################################################################
 
-locals {
-  vibe_suffix = random_id.suffix.hex
+terraform {
+  required_providers {
+    ibm = {
+      source  = "ibm-cloud/ibm"
+      version = ">= 1.84.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 3.6.0"
+    }
+    null = {
+      source  = "hashicorp/null"
+    }
+  }
 }
 
-resource "random_id" "suffix" {
-  byte_length = 2
+provider "ibm" {}
+
+###############################################################################
+# Random suffix for unique bucket naming
+###############################################################################
+
+resource "random_string" "suffix" {
+  length  = 6
+  special = false
+  upper   = false
 }
 
 ###############################################################################
-# Object Storage — Vibe Bucket
+# COS Instance and Bucket
 ###############################################################################
 
-data "ibm_resource_group" "group" {
-  name = "Default"
-}
-
-resource "ibm_resource_instance" "cos_instance" {
-  name              = "vibe-instance-${local.vibe_suffix}"
+resource "ibm_resource_instance" "vibe_cos_instance" {
+  name              = "vibe-instance-${random_string.suffix.result}"
   service           = "cloud-object-storage"
   plan              = "lite"
   location          = "global"
-  resource_group_id = data.ibm_resource_group.group.id
 }
 
 resource "ibm_cos_bucket" "vibe_bucket" {
-  bucket_name          = "vibe-bucket-${local.vibe_suffix}"
-  resource_instance_id = ibm_resource_instance.cos_instance.id
-  region_location      = var.region
-  storage_class        = "standard"
-  force_delete         = true
-}
-
-# Enable static website hosting
-resource "ibm_cos_bucket_website_configuration" "vibe_site" {
-  bucket_crn     = ibm_cos_bucket.vibe_bucket.crn
-  main_document  = "index.html"
-  error_document = "index.html"
+  bucket_name = "vibe-bucket-${random_string.suffix.result}"
+  resource_instance_id = ibm_resource_instance.vibe_cos_instance.id
+  region = var.region
+  storage_class = "standard"
 }
 
 ###############################################################################
-# Code Engine Project (optional backend for APIs)
+# COS Static Website Configuration (v1.84+ syntax)
+###############################################################################
+
+resource "ibm_cos_bucket_website_configuration" "vibe_site" {
+  bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
+  bucket_location = var.region
+
+  website_configuration {
+    index_document = "index.html"
+    error_document = "index.html"
+  }
+}
+
+###############################################################################
+# Code Engine Project (for optional backend)
 ###############################################################################
 
 resource "ibm_code_engine_project" "vibe_ce_project" {
-  name = "vibe-code-engine-${local.vibe_suffix}"
+  name     = "vibe-ce-${random_string.suffix.result}"
+  region   = var.region
 }
 
 ###############################################################################
-# Local Render Environment
+# Render Environment (write env.js)
 ###############################################################################
 
 resource "null_resource" "render_env" {
   provisioner "local-exec" {
-    environment = {
-      CODE_ENGINE_PROJECT = ibm_code_engine_project.vibe_ce_project.name
-    }
     command = <<EOT
-      echo "Rendering environment with CODE_ENGINE_PROJECT=${ibm_code_engine_project.vibe_ce_project.name}"
+      echo "window.CODE_ENGINE_URL='${ibm_code_engine_project.vibe_ce_project.name}'" > env.js
     EOT
   }
 }

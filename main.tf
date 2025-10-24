@@ -1,20 +1,16 @@
 
 ###############################################################################
-# main.tf — Resources only (IBM provider >= 1.84.0 compatible)
+# main.tf — v9 with nested parameters/annotations syntax for ibm_function_action
 ###############################################################################
 
 resource "random_id" "suffix" {
   byte_length = 3
 }
 
-# Default resource group lookup for Functions
 data "ibm_resource_group" "default" {
   name = "Default"
 }
 
-###############################################################################
-# Cloud Object Storage (COS)
-###############################################################################
 resource "ibm_resource_instance" "vibe_cos" {
   name     = "vibe-cos-${random_id.suffix.hex}"
   service  = "cloud-object-storage"
@@ -43,9 +39,6 @@ resource "ibm_cos_bucket_website_configuration" "vibe_site" {
   }
 }
 
-###############################################################################
-# IBM Cloud Functions — Namespace & Action (web-enabled)
-###############################################################################
 resource "ibm_function_namespace" "vibe_ns" {
   name              = "vibe-namespace-${random_id.suffix.hex}"
   resource_group_id = data.ibm_resource_group.default.id
@@ -55,34 +48,37 @@ resource "ibm_function_action" "vibe_push" {
   name      = "vibe-push"
   namespace = ibm_function_namespace.vibe_ns.name
 
-  # Default parameters so the frontend doesn't need to send bucket/region
-  parameters = jsonencode({
-    bucket = ibm_cos_bucket.vibe_bucket.bucket_name
-    region = var.region
-  })
+  parameters {
+    name  = "bucket"
+    value = ibm_cos_bucket.vibe_bucket.bucket_name
+  }
+  parameters {
+    name  = "region"
+    value = var.region
+  }
 
   exec {
-    # Runtime belongs here
     kind = "python:3.11"
     code = file("${path.module}/vibe_push.py")
     main = "main"
   }
 
-  # Web-enable via annotations in JSON string
-  annotations = jsonencode({
-    "web-export" = true
-    "final"      = true
-    "raw-http"   = false
-  })
+  annotations {
+    name  = "web-export"
+    value = "true"
+  }
+  annotations {
+    name  = "final"
+    value = "true"
+  }
+  annotations {
+    name  = "raw-http"
+    value = "false"
+  }
 
   publish = true
 }
 
-###############################################################################
-# Upload front-end assets to COS
-###############################################################################
-
-# Render env.js from template with function URL, bucket, region
 resource "local_file" "rendered_env" {
   filename = "${path.module}/js/env.rendered.js"
   content  = templatefile("${path.module}/env.tmpl.js", {
@@ -92,7 +88,6 @@ resource "local_file" "rendered_env" {
   })
 }
 
-# index.html
 resource "ibm_cos_bucket_object" "index_html" {
   bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
   bucket_location = var.region
@@ -100,7 +95,6 @@ resource "ibm_cos_bucket_object" "index_html" {
   content         = file("${path.module}/index.html")
 }
 
-# env.js (rendered)
 resource "ibm_cos_bucket_object" "env_js" {
   bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
   bucket_location = var.region
@@ -109,7 +103,6 @@ resource "ibm_cos_bucket_object" "env_js" {
   depends_on      = [local_file.rendered_env]
 }
 
-# api.js
 resource "ibm_cos_bucket_object" "api_js" {
   bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
   bucket_location = var.region

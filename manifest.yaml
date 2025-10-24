@@ -1,0 +1,17 @@
+apiVersion: deployable.architecture/v1
+kind: Manifest
+metadata:
+  name: vibe-ide-da-code-engine
+  displayName: Vibe IDE — Code Engine (Static + Ready for Functions)
+  version: 0.1.0
+  description: |
+    Deploys the Vibe IDE static UI to IBM Cloud Object Storage with hidden region/resource-group defaults.
+    Ready to attach Code Engine Functions later without changing the UI.
+spec:
+  terraform:
+    entrypoint: main.tf
+    variables:
+      - name: region
+        hidden: true
+      - name: resource_group
+        hidden: true

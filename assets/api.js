@@ -1,1 +1,1 @@
-console.log('api loaded');
+console.log('vibe api stable');

@@ -33,26 +33,26 @@ resource "ibm_cos_bucket" "vibe_bucket" {
   force_delete         = true
 }
 
-# Upload starter files (using current provider args)
+# Upload starter files (use 'content' for provider 1.84.x compatibility)
 resource "ibm_cos_bucket_object" "index_html" {
   bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
   bucket_location = ibm_cos_bucket.vibe_bucket.region_location
   key             = "index.html"
-  file            = "${path.module}/index.html"
+  content         = file("${path.module}/index.html")
 }
 
 resource "ibm_cos_bucket_object" "env_js" {
   bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
   bucket_location = ibm_cos_bucket.vibe_bucket.region_location
   key             = "assets/env.js"
-  file            = "${path.module}/assets/env.js"
+  content         = file("${path.module}/assets/env.js")
 }
 
 resource "ibm_cos_bucket_object" "api_js" {
   bucket_crn      = ibm_cos_bucket.vibe_bucket.crn
   bucket_location = ibm_cos_bucket.vibe_bucket.region_location
   key             = "assets/api.js"
-  file            = "${path.module}/assets/api.js"
+  content         = file("${path.module}/assets/api.js")
 }
 
 # Cloud Functions namespace + action

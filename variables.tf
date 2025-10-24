@@ -19,5 +19,5 @@ variable "website_index" {
 variable "website_error" {
   description = "Error file for website hosting"
   type        = string
-  default     = "4.html"
+  default     = "404.html"
 }

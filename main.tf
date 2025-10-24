@@ -16,6 +16,7 @@ resource "ibm_cos_bucket" "vibe_bucket" {
   resource_instance_id = ibm_resource_instance.cos_instance.id
   storage_class        = "standard"
   force_delete         = true
+  region_location      = var.region
 }
 
 resource "ibm_cos_bucket_website_configuration" "vibe_bucket_website" {

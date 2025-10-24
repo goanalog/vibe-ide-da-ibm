@@ -1,6 +1,6 @@
 
 ###############################################################################
-# main.tf — v9 with nested parameters/annotations syntax for ibm_function_action
+# main.tf — v10: final syntax using maps for parameters/annotations
 ###############################################################################
 
 resource "random_id" "suffix" {
@@ -48,13 +48,9 @@ resource "ibm_function_action" "vibe_push" {
   name      = "vibe-push"
   namespace = ibm_function_namespace.vibe_ns.name
 
-  parameters {
-    name  = "bucket"
-    value = ibm_cos_bucket.vibe_bucket.bucket_name
-  }
-  parameters {
-    name  = "region"
-    value = var.region
+  parameters = {
+    bucket = ibm_cos_bucket.vibe_bucket.bucket_name
+    region = var.region
   }
 
   exec {
@@ -63,17 +59,10 @@ resource "ibm_function_action" "vibe_push" {
     main = "main"
   }
 
-  annotations {
-    name  = "web-export"
-    value = "true"
-  }
-  annotations {
-    name  = "final"
-    value = "true"
-  }
-  annotations {
-    name  = "raw-http"
-    value = "false"
+  annotations = {
+    "web-export" = true
+    "final"      = true
+    "raw-http"   = false
   }
 
   publish = true

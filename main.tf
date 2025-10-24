@@ -1,6 +1,6 @@
 
 ###############################################################################
-# main.tf — v10: final syntax using maps for parameters/annotations
+# main.tf — v11: jsonencode syntax for parameters/annotations
 ###############################################################################
 
 resource "random_id" "suffix" {
@@ -48,10 +48,10 @@ resource "ibm_function_action" "vibe_push" {
   name      = "vibe-push"
   namespace = ibm_function_namespace.vibe_ns.name
 
-  parameters = {
+  parameters = jsonencode({
     bucket = ibm_cos_bucket.vibe_bucket.bucket_name
     region = var.region
-  }
+  })
 
   exec {
     kind = "python:3.11"
@@ -59,11 +59,11 @@ resource "ibm_function_action" "vibe_push" {
     main = "main"
   }
 
-  annotations = {
+  annotations = jsonencode({
     "web-export" = true
     "final"      = true
     "raw-http"   = false
-  }
+  })
 
   publish = true
 }

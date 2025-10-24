@@ -1,6 +1,6 @@
 
 ###############################################################################
-# main.tf — v12: parameters and annotations moved inside exec block
+# main.tf — v13: Correct Function Action schema with parameters & annotations blocks
 ###############################################################################
 
 resource "random_id" "suffix" {
@@ -52,17 +52,31 @@ resource "ibm_function_action" "vibe_push" {
     kind = "python:3.11"
     code = file("${path.module}/vibe_push.py")
     main = "main"
+  }
 
-    parameters = jsonencode({
-      bucket = ibm_cos_bucket.vibe_bucket.bucket_name
-      region = var.region
-    })
+  parameters {
+    name  = "bucket"
+    value = ibm_cos_bucket.vibe_bucket.bucket_name
+  }
 
-    annotations = jsonencode({
-      "web-export" = true
-      "final"      = true
-      "raw-http"   = false
-    })
+  parameters {
+    name  = "region"
+    value = var.region
+  }
+
+  annotations {
+    name  = "web-export"
+    value = true
+  }
+
+  annotations {
+    name  = "final"
+    value = true
+  }
+
+  annotations {
+    name  = "raw-http"
+    value = false
   }
 
   publish = true

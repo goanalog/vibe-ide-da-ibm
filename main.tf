@@ -54,20 +54,15 @@ resource "ibm_cos_bucket_website_configuration" "vibe_bucket_website" {
   ]
 }
 
-# Fixes 403 AccessDenied error
-resource "ibm_iam_authorization_policy" "vibe_public_access" {
-  source_service_name         = "cloud-object-storage"
-  target_service_name         = "cloud-object-storage"
-  target_resource_instance_id = ibm_resource_instance.cos_instance.id
-  roles                       = ["ContentReader"]
-  access_group_id             = "public"
+# Fixes 403 AccessDenied error using the correct resource for public access
+resource "ibm_iam_access_group_policy" "vibe_bucket_public_read_policy" {
+  access_group_id = "AccessGroupId-PublicAccess" # ID for the built-in Public Access group
+  roles           = ["ContentReader"]
 
-  resource_attributes {
-    name  = "resourceType"
-    value = "bucket"
-  }
-  resource_attributes {
-    name  = "resource"
-    value = ibm_cos_bucket.vibe_bucket.bucket_name
+  resources {
+    service               = "cloud-object-storage"
+    resource_instance_id  = ibm_resource_instance.cos_instance.id
+    resource_type         = "bucket"
+    resource              = ibm_cos_bucket.vibe_bucket.bucket_name
   }
 }

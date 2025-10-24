@@ -1,6 +1,6 @@
 
 ###############################################################################
-# main.tf — v13: Correct Function Action schema with parameters & annotations blocks
+# main.tf — v14: IBM Cloud Functions compatible parameters/annotations maps
 ###############################################################################
 
 resource "random_id" "suffix" {
@@ -54,29 +54,15 @@ resource "ibm_function_action" "vibe_push" {
     main = "main"
   }
 
-  parameters {
-    name  = "bucket"
-    value = ibm_cos_bucket.vibe_bucket.bucket_name
+  parameters = {
+    "bucket" = ibm_cos_bucket.vibe_bucket.bucket_name
+    "region" = var.region
   }
 
-  parameters {
-    name  = "region"
-    value = var.region
-  }
-
-  annotations {
-    name  = "web-export"
-    value = true
-  }
-
-  annotations {
-    name  = "final"
-    value = true
-  }
-
-  annotations {
-    name  = "raw-http"
-    value = false
+  annotations = {
+    "web-export" = true
+    "final"      = true
+    "raw-http"   = false
   }
 
   publish = true

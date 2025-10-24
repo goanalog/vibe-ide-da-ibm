@@ -2,7 +2,7 @@
   "name": "vibe-ide-da-code-engine",
   "display_name": "Vibe IDE \u2014 Code Engine",
   "description": "Playful, demo-friendly IDE UI hosted on IBM Cloud Object Storage. Ready for Code Engine Functions.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "metadata": {
     "type": "deployable-architecture",
     "provider": "ibm",

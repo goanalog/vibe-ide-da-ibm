@@ -7,7 +7,7 @@ variable "region" {
 variable "bucket_prefix" {
   description = "Prefix for the COS bucket"
   type        = string
-  default     = "vibe-bucket"  <--- Add "=" here
+  default     = "vibe-bucket"
 }
 
 variable "website_index" {
@@ -19,5 +19,5 @@ variable "website_index" {
 variable "website_error" {
   description = "Error file for website hosting"
   type        = string
-  default     = "404.html"
+  default     = "4.html"
 }

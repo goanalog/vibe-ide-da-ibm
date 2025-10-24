@@ -32,6 +32,12 @@ resource "ibm_cos_bucket_website_configuration" "vibe_bucket_website" {
       key = var.website_error
     }
   }
+
+  # Add this block to fix the race condition
+  depends_on = [
+    ibm_cos_bucket_object.index_html,
+    ibm_cos_bucket_object.error_html
+  ]
 }
 
 resource "ibm_cos_bucket_object" "index_html" {

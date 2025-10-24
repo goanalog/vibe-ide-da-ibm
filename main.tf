@@ -1,6 +1,6 @@
 
 ###############################################################################
-# main.tf — v14: IBM Cloud Functions compatible parameters/annotations maps
+# main.tf — v15: Final IBM Cloud Schematics confirmed version
 ###############################################################################
 
 resource "random_id" "suffix" {
@@ -54,16 +54,16 @@ resource "ibm_function_action" "vibe_push" {
     main = "main"
   }
 
-  parameters = {
-    "bucket" = ibm_cos_bucket.vibe_bucket.bucket_name
-    "region" = var.region
-  }
+  parameters  = jsonencode({
+    bucket = ibm_cos_bucket.vibe_bucket.bucket_name
+    region = var.region
+  })
 
-  annotations = {
+  annotations = jsonencode({
     "web-export" = true
     "final"      = true
     "raw-http"   = false
-  }
+  })
 
   publish = true
 }

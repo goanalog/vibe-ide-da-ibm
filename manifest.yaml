@@ -1,5 +1,0 @@
-
-name: vibe-ide-da
-version: 1.0.0
-description: Deploy a live Vibe IDE environment with Cloud Function push-to-live support.
-type: terraform

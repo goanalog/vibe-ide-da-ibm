@@ -1,1 +1,0 @@
-window.__VIBE_ENV__={FUNCTION_BASE_URL:''};

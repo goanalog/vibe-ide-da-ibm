@@ -1,0 +1,65 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vibe IDE — Live Remix Edition</title>
+  <style>
+    body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#0f172a; color:#e2e8f0; height:100vh; display:flex; flex-direction:column; }
+    header { padding:1rem 1.25rem; background:#020617; }
+    main { flex:1; display:grid; grid-template-columns:1fr; gap:1rem; padding:1rem 1.25rem; }
+    @media (min-width:980px){ main { grid-template-columns:1fr 1fr; } }
+    .card { border:1px solid #334155; border-radius:10px; overflow:hidden; }
+    .card h2 { margin:0; padding:.8rem 1rem; background:#111827; }
+    textarea { width:100%; min-height:52vh; resize:vertical; font:13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:#0b1220; color:#e2e8f0; border:0; padding:1rem; }
+    iframe { width:100%; height:52vh; border:0; background:white; }
+    .toolbar { display:flex; gap:.6rem; padding: .5rem 1.25rem 0; }
+    .btn { border:1px solid #64748b; background:#0b1220; color:#e2e8f0; padding:.5rem .9rem; border-radius:8px; cursor:pointer; }
+    .btn.primary { background:#0ea5e9; color:#0b1220; border-color:#0284c7; }
+    footer { text-align:center; color:#94a3b8; padding:1rem; }
+  </style>
+  <script src="js/env.js"></script>
+  <script type="module" src="js/api.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Vibe IDE — Live Remix</h1>
+    <p style="margin:.25rem 0 0 0;">Paste HTML → Push Live → See it instantly</p>
+  </header>
+
+  <div class="toolbar">
+    <button class="btn primary" id="push">Push Live</button>
+  </div>
+
+  <main>
+    <section class="card">
+      <h2>Editor</h2>
+      <textarea id="vibe-editor" spellcheck="false"><h1 style='text-align:center'>Hello, Vibe 🌈</h1><p style='text-align:center'>Edit this and click “Push Live”.</p></textarea>
+    </section>
+    <section class="card">
+      <h2>Preview</h2>
+      <iframe id="vibe-preview" title="live-preview"></iframe>
+    </section>
+  </main>
+
+  <footer>Deployed via IBM Cloud Projects — Vibe‑Coding Deployable Architecture</footer>
+
+  <script type="module">
+    import { pushLive, manifestHTML } from './js/api.js';
+    const editor = document.getElementById('vibe-editor');
+    const preview = document.getElementById('vibe-preview');
+    const btn = document.getElementById('push');
+    async function refreshPreview() {
+      const out = await manifestHTML(editor.value);
+      preview.src = out.url;
+    }
+    btn.addEventListener('click', async () => {
+      await refreshPreview();
+      const res = await pushLive(editor.value);
+      alert(res.url ? `✨ Live at: ${res.url}` : `Error: ${res.error || 'Unknown'}`);
+    });
+    refreshPreview();
+  </script>
+</body>
+</html>

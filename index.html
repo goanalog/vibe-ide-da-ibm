@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Vibe IDE — Live Manifest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#070712; --panel:#0f0f1f; --ink:#f8f9ff; --muted:#a7b0c0; --accent:#7cf4ff; --accent2:#d18bff;
+      --ring: 0 0 0 2px rgba(124,244,255,.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin:0; padding:0; min-height:100vh; color:var(--ink);
+      background: radial-gradient(1200px 800px at 10% -10%, rgba(110,30,255,.35), transparent 60%),
+                  radial-gradient(1000px 700px at 120% 10%, rgba(0,240,255,.25), transparent 55%),
+                  var(--bg);
+      font-family:"IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      display:flex; flex-direction:column;
+    }
+    header { padding:1rem 1.25rem; }
+    .toolbar {
+      display:flex; flex-wrap:wrap; gap:.5rem; align-items:center;
+      padding: .5rem 1.25rem 1rem 1.25rem;
+    }
+    .btn {
+      border:1px solid #2a2a44; background:linear-gradient(180deg, #16162b, #101022);
+      color:var(--ink); padding:.55rem .9rem; border-radius:10px; cursor:pointer;
+      font-weight:600; letter-spacing:.2px;
+      transition:transform .08s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .btn:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,.35); }
+    .btn:focus-visible { outline:none; box-shadow: var(--ring); }
+    .btn.primary { border-color:#2563eb; background:linear-gradient(180deg,#1f2a44,#12213e); }
+    .grid {
+      display:grid; grid-template-columns: 1fr; gap:1rem; padding:0 1.25rem 5rem 1.25rem;
+    }
+    @media (min-width: 1000px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+    .card {
+      background: rgba(15,15,31,.72); border:1px solid #232345; border-radius:14px;
+      overflow:hidden;
+    }
+    .card h2 { margin:0; padding: .9rem 1rem; border-bottom:1px solid #232345; font-size: .95rem; color:#b7c2d9; }
+    #vibe-editor {
+      width:100%; min-height:52vh; background: #0a0a16; color:#c9ffe6; border:0; padding:1rem; font: 13.5px/1.5 "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      outline:none; resize: vertical;
+    }
+    #vibe-preview { width:100%; height:52vh; display:block; border:0; background:white; }
+    .footnote { color:var(--muted); font-size:.85rem; padding:.75rem 1rem; }
+    .vibe-banner {
+      position:fixed; bottom:0; left:0; right:0;
+      padding:.6rem 1rem; text-align:center; z-index:50;
+      background: linear-gradient(90deg,#34d399,#ec4899,#f97316); background-size:300% 300%;
+      animation: bannerShift 12s ease-in-out infinite alternate, fadeIn .9s ease-in .5s 1 forwards;
+      color:#fff; font-size:.9rem; opacity:0.92;
+    }
+    @keyframes bannerShift { from{background-position:0 0} to{background-position:100% 0} }
+    @keyframes fadeIn { from{opacity:0} to{opacity:.92} }
+    .vibe-banner a { color:#fff; font-weight:600; text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 style="margin:0; font-size:1.25rem; font-weight:600;">Vibe IDE — Live Manifest</h1>
+    <div class="footnote">Paste or upload your HTML/CSS/JS, then <strong>Manifest</strong> for an instant preview, or <strong>Save to Vibe Bucket</strong> to publish.</div>
+  </header>
+
+  <div class="toolbar" role="toolbar" aria-label="Vibe actions">
+    <button class="btn" data-action="load" aria-label="Load from Vibe Bucket">Load from Vibe Bucket</button>
+    <button class="btn primary" data-action="manifest" aria-label="Manifest">Manifest</button>
+    <button class="btn" data-action="push" aria-label="Save to Vibe Bucket">Save to Vibe Bucket</button>
+    <button class="btn" data-action="project" aria-label="Push Update to Project">Push Update to Project</button>
+    <button class="btn" data-action="fork" aria-label="Fork to Private Catalog">Fork to Private Catalog</button>
+  </div>
+
+  <main class="grid" role="main">
+    <section class="card" aria-labelledby="editor-title">
+      <h2 id="editor-title">Editor</h2>
+      <textarea id="vibe-editor" spellcheck="false"><!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <title>Vibe IDE :: Manifest Your Code</title>
+    <link href=\"https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@300;400;700&display.swap\" rel=\"stylesheet\">
+    
+    <style>
+        /* --- Base & Vibe --- */
+        :root {
+            --color-primary: #00ffc3;
+            --color-secondary: #ff00c1;
+            --color-accent: #f9f871;
+            --color-dark: #1a0229;
+            --color-light: #ffffff;
+        }
+
+        body {
+            font-family: 'IBM Plex Serif', serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient-flow 15s ease infinite;
+            color: var(--color-light);
+            margin: 0;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        @keyframes gradient-flow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        h2, h3 {
+            font-weight: 400;
+            text-shadow: 0 0 5px var(--color-dark);
+            letter-spacing: 0.5px;
+        }
+        
+        /* --- Draggable Panels --- */
+        .panel {
+            position: absolute;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--color-primary);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+            transition: box-shadow 0.3s ease, z-index 0.1s ease;
+            z-index: 10;
+        }
+        
+        .panel.dragging {
+            box-shadow: 0 0 30px var(--color-primary);
+            z-index: 100;
+        }
+
+        .panel-header {
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid var(--color-primary);
+            border-radius: 8px 8px 0 0;
+            padding: 0.75rem 1rem;
+            cursor: grab;
+        }
+        
+        .panel-header h2 {
+            margin: 0;
+            color: var(--color-primary);
+        }
+        
+        .panel-content {
+            padding: 1rem;
+        }
+        
+        /* --- Editor Panel --- */
+        #editor-panel {
+            top: 2vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70vw;
+            min-width: 300px;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            z-index: 11;
+        }
+        
+        #code-editor {
+            width: 100%;
+            height: 300px;
+            background: var(--color-dark);
+            color: var(--color-primary);
+            border: none;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            padding: 0.5rem;
+            resize: vertical;
+            box-sizing: border-box;
+            margin-bottom: 1rem;
+        }
+
+        /* --- Editor Footer (Action Bar) --- */
+        .editor-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .preview-cluster {
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        /* --- Picture-in-Picture Live View --- */
+        .pip-preview-wrapper {
+            position: relative;
+            width: 250px;
+            height: 150px;
+            border: 2px solid var(--color-secondary);
+            border-radius: 6px;
+            background: #000;
+            box-shadow: 5px 5px 0px 0px var(--color-secondary);
+            overflow: hidden;
+        }
+        
+        .pip-label {
+            position: absolute;
+            top: -15px;
+            left: 10px;
+            background: var(--color-secondary);
+            color: var(--color-light);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            z-index: 1;
+            user-select: none;
+        }
+
+        #pip-preview {
+            width: 1000px;
+            height: 600px;
+            transform: scale(0.25);
+            transform-origin: 0 0;
+            background: var(--color-light);
+            border: none;
+            pointer-events: none; 
+        }
+
+        /* --- Action Buttons --- */
+        .btn {
+            font-family: 'IBM Plex Serif', serif;
+            font-size: 0.9rem;
+            font-weight: 400;
+            padding: 0.6rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        /* Shared primary button style */
+        .btn-primary-vibe {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-dark);
+            border: 2px solid var(--color-accent);
+            background: linear-gradient(-45deg, var(--color-accent), var(--color-primary), var(--color-accent));
+            background-size: 200% 200%;
+            animation: pulse-accent 2s infinite, gradient-flow 3s ease infinite;
+        }
+        
+        .btn-primary-vibe:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px var(--color-accent);
+        }
+        
+        #btn-manifest {
+            padding: 0.75rem 1.25rem;
+            position: absolute;
+            right: -20px;
+            bottom: -15px;
+            z-index: 2;
+        }
+        
+        #btn-remix {
+             position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 210;
+            padding: 0.75rem 1.25rem;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--color-primary);
+            border: 1px solid var(--color-primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--color-primary);
+            color: var(--color-dark);
+        }
+
+        .footer-actions-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* --- Overflow Menu --- */
+        #more-menu {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: var(--color-dark);
+            border: 1px solid var(--color-primary);
+            border-radius: 5px;
+            padding: 0.5rem;
+            z-index: 110;
+            width: 180px;
+        }
+        
+        #more-menu.show {
+            display: block;
+        }
+        
+        #more-menu button {
+            display: block;
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--color-primary);
+            padding: 0.5rem;
+            text-align: left;
+            cursor: pointer;
+            font-family: 'IBM Plex Serif', serif;
+            font-size: 0.9rem;
+        }
+        
+        #more-menu button:hover {
+            background: var(--color-primary);
+            color: var(--color-dark);
+        }
+
+        /* --- Vibe-Deck (Controls) --- */
+        #vibe-deck {
+            top: auto;
+            bottom: 2vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            max-width: 90vw;
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .control-group label {
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        input[type=\"range\"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 5px;
+            outline: none;
+            border: 1px solid var(--color-secondary);
+        }
+
+        input[type=\"range\"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--color-secondary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--color-secondary);
+        }
+
+        @keyframes pulse-accent {
+            0% { box-shadow: 0 0 15px var(--color-accent); }
+            50% { box-shadow: 0 0 25px var(--color-accent); }
+            100% { box-shadow: 0 0 15px var(--color-accent); }
+        }
+        
+        /* --- Full-Screen Preview --- */
+        #full-preview-wrapper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 200;
+        }
+        
+        #full-preview {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: var(--color-light);
+        }
+        
+        /* --- Simplified Toast Alert --- */
+        #vibe-toast {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--color-dark);
+            border: 1px solid var(--color-primary);
+            color: var(--color-primary);
+            padding: 1rem;
+            border-radius: 5px;
+            z-index: 1001;
+            font-size: 1rem;
+        }
+        
+        /* --- Self-Contained Footer --- */
+        .promo-footer {
+            position: fixed;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            font-weight: 300;
+            color: var(--color-primary);
+            opacity: 0.7;
+            text-align: center;
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
+            #editor-panel {
+                width: 95vw;
+                top: 1vh;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            #vibe-deck {
+                width: 95vw;
+                top: auto;
+                bottom: 1vh;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            .editor-footer {
+                flex-direction: column;
+                align-items: center;
+                gap: 2rem;
+            }
+            #btn-manifest {
+                position: relative;
+                right: auto;
+                bottom: auto;
+                width: 100%;
+            }
+            .footer-actions-right {
+                width: 100%;
+                justify-content: space-around;
+            }
+            .pip-preview-wrapper {
+                width: 100%;
+                height: 180px;
+            }
+            #pip-preview {
+                transform: scale(0.35);
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+  <main class="grid" role="main">
+    <section class="card" aria-labelledby="editor-title">
+      <h2 id="editor-title">Editor</h2>
+      <textarea id="vibe-editor" spellcheck="false"></textarea>
+    </section>
+    <section class="card" aria-labelledby="preview-title">
+      <h2 id="preview-title">Live Preview</h2>
+      <iframe id="vibe-preview" title="Vibe Live Preview" sandbox="allow-scripts allow-same-origin"></iframe>
+    </section>
+  </main>
+
+  <div class="vibe-banner">
+    🌀 Deployed via <strong>IBM Cloud Projects</strong> — built on <strong>Vibe‑Coding Deployable Architecture</strong>
+  </div>
+
+  <script src="env.js"></script>
+  <script type="module" src="js/api.js"></script>
+  <script type="module" src="js/ui.js"></script>
+</body>
+</html>

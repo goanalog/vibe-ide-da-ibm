@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Vibe IDE — IBM Cloud</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600;700&family=IBM+Plex_Mono:wght@400;600&display=swap" rel="stylesheet">
+<script>
+window.__VIBE_ENV_LOADED__=false;window.__VIBE_APP_QUEUED__=false;
+function handleEnvLoadSuccess(){window.__VIBE_ENV_LOADED__=true;if(window.__VIBE_APP_QUEUED__)window.runAppOnEnvLoad();}
+function handleEnvLoadError(){window.__VIBE_ENV_LOADED__=true;window.__VIBE_ENV__={REGION:"local",PREFIX:"vibe",PUSH_API_URL:"",PROJECT_URL:"",PRIMARY_OUTPUT:"sample.html",APP_REGION:"local",VIBE_THEME:"muted-neon",VIBE_VERSION:"local"};if(window.__VIBE_APP_QUEUED__)window.runAppOnEnvLoad();}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/notiflix@3.2.7/dist/notiflix-aio-3.2.7.min.js" defer></script>
+<script src="assets/env.js?cb=__BUILD__" onload="handleEnvLoadSuccess()" onerror="handleEnvLoadError()"></script>
+<style>
+html,body{height:100%}body{margin:0;background:#0b0f1a;color:#f4f4f4;font-family:"IBM Plex Sans",system-ui;overflow:hidden;padding:32px}
+.panel{position:absolute;background:#0a0f1c;border:2px solid #00ffc3;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5);overflow:hidden;min-width:300px;min-height:150px}
+header{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#101528;border-bottom:1px solid #00ffc3;font:13px "IBM Plex Mono",monospace;color:#c6c6c6}
+.panel-content{padding:16px;height:calc(100% - 39px);overflow:hidden}
+textarea{width:100%;height:100%;background:#0a0f1c;color:#f4f4f4;border:0;resize:none;outline:none;padding:14px 16px;font:13.5px "IBM Plex Mono",monospace;line-height:1.5}
+#editor-panel{top:32px;left:32px;width:calc(66.66% - 40px);height:calc(100% - 64px);z-index:10}
+#pip-cluster{top:32px;right:32px;width:calc(33.33% - 40px);height:auto;max-height:calc(100% - 260px - 32px - 12px);z-index:11;min-height:150px}
+#vibe-deck{right:32px;width:calc(33.33% - 40px);height:260px;z-index:10;top:auto;bottom:32px}
+#pip-preview-wrapper{width:100%;position:relative;padding-bottom:56.25%;border:1px solid #00ffc3;border-radius:8px;overflow:hidden;margin-top:12px;background:rgba(0,0,0,.5)}
+#pip-preview{position:absolute;top:0;left:0;width:100%;height:100%;background:#fff;border:none}
+.actions{display:flex;gap:8px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid #00ffc3;border-radius:999px;font:12px "IBM Plex Mono",monospace;color:#00ffc3;background:transparent}
+.pill img{width:16px;height:16px}
+.btn{background:#101528;border:1px solid #00ffc3;color:#00ffc3;padding:7px 10px;border-radius:8px;font-size:.85rem;font-weight:600}
+</style></head>
+<body>
+<div id="editor-panel" class="panel">
+  <header><span>index.html — Editor</span>
+    <div class="actions">
+      <button id="btnShare" class="pill" title="Copy live link"><img src="assets/launch.svg" alt=""/>live vibe</button>
+      <button id="btnExport" class="btn" title="Download .zip">Export 📦</button>
+      <button id="btnPush" class="btn" title="Publish to Cloud" disabled>Push 🚀</button>
+    </div>
+  </header>
+  <div class="panel-content"><textarea id="editor" aria-label="Code Editor"></textarea></div>
+</div>
+
+<div id="pip-cluster" class="panel">
+  <header><span>Preview</span><span class="pill"><span>🔴</span> LIVE!</span></header>
+  <div class="panel-content"><div id="pip-preview-wrapper"><iframe id="pip-preview" sandbox="allow-scripts allow-forms allow-same-origin" title="Live preview"></iframe></div></div>
+</div>
+
+<div id="vibe-deck" class="panel">
+  <header><span>Vibe-Deck</span></header>
+  <div class="panel-content"><p style="margin:0;opacity:.85">Initial vibes manifested — Remix your vibe in Vibe IDE.</p><p style="margin:8px 0 0;opacity:.8">Paste HTML into the editor and Push 🚀 to publish as <code>sample.html</code>.</p></div>
+</div>
+
+<script>
+function notifyOk(m){ if(window.Notiflix) Notiflix.Notify.success(m); }
+function notifyFail(m){ if(window.Notiflix) Notiflix.Notify.failure(m); }
+function nowTs(){ return new Date().toISOString().replace(/[-:.TZ]/g,'').slice(0,14); }
+function resolveLiveUrl(){
+  const env=window.__VIBE_ENV__||{};
+  const base=(env.PROJECT_URL&&env.PROJECT_URL.trim())?env.PROJECT_URL:window.location.origin;
+  const primary=env.PRIMARY_OUTPUT||"sample.html";
+  try{ return new URL(primary, base.endsWith('/')?base:base+'/').toString(); }catch(e){ return (base.endsWith('/')?base:base+'/')+primary; }
+}
+async function publish(html){
+  const env=window.__VIBE_ENV__||{};
+  if(!env.PUSH_API_URL||env.PUSH_API_URL.trim()===""){ notifyFail("Push API not configured."); return {ok:false}; }
+  try{
+    const res=await fetch(env.PUSH_API_URL,{method:"POST",headers:{"Content-Type":"text/html"},body:html});
+    const text=await res.text();
+    if(!res.ok) throw new Error(text||("HTTP "+res.status));
+    const live=resolveLiveUrl(); const bust=(live.includes('?')?'&':'?')+'cb='+Date.now();
+    setTimeout(()=>{ try{ fetch(live+bust,{cache:'reload'}).finally(()=>{ window.open(live+bust,'_blank'); }); }catch(_){} },200);
+    notifyOk("Publish successful. Live refreshed.");
+    if(window.Notiflix){ Notiflix.Report.success('Publish complete','Your live vibe is updated and a fresh tab was opened.','Nice ✨'); }
+    return {ok:true, body:text};
+  }catch(e){ notifyFail("Publish failed: "+(e.message||e)); return {ok:false,error:String(e)}; }
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const ed=document.getElementById('editor'); const pv=document.getElementById('pip-preview');
+  const btnPush=document.getElementById('btnPush'); const btnShare=document.getElementById('btnShare'); const btnExport=document.getElementById('btnExport');
+  function render(){ const doc=ed.value||""; const blob=new Blob([doc],{type:'text/html'}); const url=URL.createObjectURL(blob); pv.src=url; localStorage.setItem('vibe.page',doc); }
+  if(!localStorage.getItem('vibe.page')){ fetch('sample.html?seed='+nowTs()).then(r=>r.text()).then(t=>{ ed.value=t; render(); }); } else { ed.value=localStorage.getItem('vibe.page')||''; render(); }
+  ed.addEventListener('input',render);
+  btnShare.addEventListener('click',async()=>{ const link=resolveLiveUrl(); try{ await navigator.clipboard.writeText(link); notifyOk("Live link copied: "+link);}catch(e){ notifyFail("Copy failed. "+link);} });
+  btnExport.addEventListener('click', async()=>{ if(!window.JSZip) return notifyFail("JSZip not loaded."); const z=new JSZip(); z.file('index.html',document.documentElement.outerHTML); z.file('sample.html', await (await fetch('sample.html')).text()); z.folder('assets').file('env.js', await (await fetch('assets/env.js')).text()); z.folder('assets').file('launch.svg', await (await fetch('assets/launch.svg')).text()); const blob=await z.generateAsync({type:'blob'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='vibe-site.zip'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); });
+  btnPush.disabled=false;
+  btnPush.addEventListener('click', async()=>{ await publish(ed.value); });
+});
+</script>
+</body></html>

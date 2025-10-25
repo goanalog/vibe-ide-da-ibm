@@ -1,0 +1,22 @@
+{
+  "name": "Vibe IDE \u2014 Deployable Architecture",
+  "id": "vibe-ide-da",
+  "version": "1.0.0",
+  "short_description": "Zero-input, vibey sample + IDE with one-click publish",
+  "long_description": "Vibe IDE ships a live sample page (sample.html) and keeps the editor (index.html) at a fixed URL. Push \ud83d\ude80 overwrites only the sample so the IDE stays online. Optional Code Engine broker can be wired via push_api_url.",
+  "tags": [
+    "ibm-cloud",
+    "code-engine",
+    "cos",
+    "static-site",
+    "ide",
+    "zero-config"
+  ],
+  "icons": {
+    "launch": "assets/launch.svg"
+  },
+  "outputs": [
+    "primaryoutputlink",
+    "push_api_url"
+  ]
+}

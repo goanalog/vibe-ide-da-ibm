@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Vibe IDE</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600;700&family=IBM+Plex_Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box} html,body{height:100%} body{margin:0;background:linear-gradient(-45deg,#ee7752,#e73c7e,#23a6d5,#23d5ab);background-size:400% 400%;animation:flow 15s ease infinite;color:#f4f4f4;font-family:"IBM Plex Sans",system-ui;overflow:hidden;padding:40px}
+@keyframes flow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.panel{position:relative;border:2px solid #00ffc3;border-radius:12px;background:#0a0f1c;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#layout-grid{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:auto 272px;gap:20px;height:calc(100vh - 80px)}
+#editor-panel{grid-column:1;grid-row:1/span 2}
+#pip-cluster{grid-column:2;grid-row:1;display:flex;flex-direction:column;padding:8px}
+#vibe-deck{grid-column:2;grid-row:2;display:flex;align-items:center;justify-content:center;gap:12px}
+textarea{width:100%;height:100%;border:0;outline:none;background:#0a0f1c;color:#f4f4f4;padding:16px;font-family:"IBM Plex Mono",monospace}
+#pip-preview{flex:1;border:1px solid #00ffc3;border-radius:8px}
+button{padding:10px 16px;border-radius:8px;border:1px solid #00ffc3;background:#101528;color:#00ffc3;font-weight:700;cursor:pointer}
+.loading-chip{font-weight:700;border:1px solid #f9f871;background:#101528;color:#f9f871;border-radius:9999px;padding:8px 12px;display:none}
+@media (max-width:980px){body{overflow-y:auto;padding:16px} #layout-grid{display:block;height:auto} .panel{width:100%;height:auto;transform:none!important;margin-bottom:16px} #editor-panel{height:450px} textarea{height:400px} #pip-preview{height:240px}}
+</style>
+<script>
+  window.__VIBE_ENV_LOADED__=false;window.__VIBE_APP_QUEUED__=false;
+  function handleEnvLoadSuccess(){window.__VIBE_ENV_LOADED__=true;if(window.__VIBE_APP_QUEUED__) window.runAppOnEnvLoad();}
+  function handleEnvLoadError(){window.__VIBE_ENV_LOADED__=true;window.__VIBE_ENV__={REGION:"local",PUSH_API_URL:""};if(window.__VIBE_APP_QUEUED__) window.runAppOnEnvLoad();}
+</script>
+<script src="assets/env.js" onload="handleEnvLoadSuccess()" onerror="handleEnvLoadError()"></script>
+</head>
+<body>
+  <div id="layout-grid">
+    <div id="editor-panel" class="panel"><textarea id="editor"></textarea></div>
+    <div id="pip-cluster" class="panel"><iframe id="pip-preview" title="Live preview"></iframe></div>
+    <div id="vibe-deck" class="panel">
+      <button id="btnPush">Push 🚀</button>
+      <span id="loadingChip" class="loading-chip" aria-live="polite">Summoning the Vibe Engine… ⚙️✨</span>
+    </div>
+  </div>
+<script>
+window.runAppOnEnvLoad=()=>{
+  const dom={editor:document.getElementById('editor'),pip:document.getElementById('pip-preview'),btnPush:document.getElementById('btnPush'),chip:document.getElementById('loadingChip')};
+  const LS='vibe.layout.v1';
+  function render(){const html=dom.editor.value||'<!doctype html><html><body><h1>Vibe IDE</h1><p>Live preview is active.</p></body></html>'; const blob=new Blob([html],{type:'text/html'}); const url=URL.createObjectURL(blob); dom.pip.src=url;}
+  function savePanel(p){try{const r=p.getBoundingClientRect();const x=parseFloat(p.dataset.x)||0,y=parseFloat(p.dataset.y)||0;const raw=localStorage.getItem(LS);const d=raw?JSON.parse(raw):{};d[p.id]={x,y,w:Math.round(r.width),h:Math.round(r.height)};localStorage.setItem(LS,JSON.stringify(d));}catch{}}
+  function loadLayout(){try{const raw=localStorage.getItem(LS);if(!raw)return;const saved=JSON.parse(raw);const b=document.getElementById('layout-grid').getBoundingClientRect();document.querySelectorAll('.panel').forEach(p=>{const s=saved[p.id];if(!s)return;if(typeof s.x==='number'&&typeof s.y==='number'){p.style.transform=`translate(${s.x}px,${s.y}px)`;p.dataset.x=s.x;p.dataset.y=s.y;}if(s.w)p.style.width=s.w+'px';if(s.h)p.style.height=s.h+'px';const r=p.getBoundingClientRect();const w=Math.max(0,Math.min(r.right,b.right)-Math.max(r.left,b.left));const h=Math.max(0,Math.min(r.bottom,b.bottom)-Math.max(r.top,b.top));if((w*h)/Math.max(1,r.width*r.height)<0.25){p.style.transform='';p.dataset.x=0;p.dataset.y=0;if(s.w)p.style.width='';if(s.h)p.style.height='';delete saved[p.id];localStorage.setItem(LS,JSON.stringify(saved));}});}catch{}}
+  function setupDrag(){let t=null,sx=0,sy=0,x0=0,y0=0;document.querySelectorAll('.panel').forEach(p=>{p.addEventListener('mousedown',e=>{if(e.target.closest('button'))return;t=p;x0=e.clientX;y0=e.clientY;sx=parseFloat(p.dataset.x)||0;sy=parseFloat(p.dataset.y)||0;document.addEventListener('mousemove',mm);document.addEventListener('mouseup',mu);});});function mm(e){if(!t)return;const b=document.getElementById('layout-grid').getBoundingClientRect();const r=t.getBoundingClientRect();const nx=sx+(e.clientX-x0), ny=sy+(e.clientY-y0);const cx=Math.min(Math.max(nx,b.left-r.left+sx),b.right-r.right+sx);const cy=Math.min(Math.max(ny,b.top-r.top+sy),b.bottom-r.bottom+sy);t.style.transform=`translate(${cx}px,${cy}px)`;t.dataset.x=cx;t.dataset.y=cy;}function mu(){if(t)savePanel(t);t=null;document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);}}
+  async function doPush(){
+    const base=(window.__VIBE_ENV__&&window.__VIBE_ENV__.PUSH_API_URL)||"";
+    if(!base){alert("Push API not configured.");return;}
+    const url=base.replace(/\/$/,"")+"/publish";
+    const form=new FormData();
+    form.append("bucket","");
+    form.append("region","");
+    form.append("key","index.html");
+    form.append("file",new Blob([dom.editor.value],{type:"text/html"}),"index.html");
+    dom.chip.style.display='inline-block';
+    // Retry with backoff; show magical loading for potential cold start
+    let ok=false,last=""; for(let i=0;i<6 && !ok;i++){ try{
+      const r=await fetch(url,{method:"POST",body:form});
+      ok=r.ok; if(!ok){ last=await r.text(); await new Promise(res=>setTimeout(res,(i+1)*(i+1)*500)); }
+    }catch(e){ last=e.message; await new Promise(res=>setTimeout(res,(i+1)*(i+1)*500)); } }
+    dom.chip.style.display='none';
+    if(!ok){ alert("Push failed: "+(last||"unknown error")); return; }
+    alert("Published!");
+  }
+  dom.editor.addEventListener('input',render);
+  dom.btnPush.addEventListener('click',doPush);
+  dom.editor.value='<!doctype html><html><body><h1>Vibe IDE</h1><p>Start typing to edit. Click Push 🚀 to publish.</p></body></html>';
+  render(); loadLayout(); setupDrag();
+};
+document.addEventListener('DOMContentLoaded',()=>{window.__VIBE_APP_QUEUED__=true;if(window.__VIBE_ENV_LOADED__) window.runAppOnEnvLoad();});
+</script>
+</body></html>

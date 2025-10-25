@@ -1,0 +1,15 @@
+versions:
+  - version: 1.3.0
+    autoDeploy: true
+    files:
+      - terraform/versions.tf
+      - terraform/variables.tf
+      - terraform/main.tf
+      - terraform/outputs.tf
+      - sample-app/index.html
+      - sample-app/assets/env.js.tmpl
+      - functions-broker/Dockerfile
+      - functions-broker/package.json
+      - functions-broker/server.js
+      - README.md
+      - catalog.json

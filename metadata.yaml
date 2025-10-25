@@ -1,0 +1,10 @@
+apiVersion: v1
+name: vibe-ide-da-orb-v1.3.4
+kind: deployable-architecture
+displayName: Vibe IDE — Orb v1.3.4
+shortDescription: Zero-input IBM Cloud sample with IDE + Code Engine push broker.
+longDescription: Auto-deploys a sample static site and a Vibe IDE that can publish to COS via a Code Engine broker. Broker on. Auto-refresh after publish. Share link + publish log.
+icon: icons/vibe-orb.png
+screenshots:
+  - path: screenshots/hero-ide.png
+  - path: screenshots/hero-sample.png

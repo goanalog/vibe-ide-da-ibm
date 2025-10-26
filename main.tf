@@ -1,6 +1,15 @@
 terraform {
-  # This version constraint is compatible with 0.12.x
-  required_version = "~> 0.12"
+  required_version = "~> 1.12.0" # Allows 1.12.2
+  required_providers = {
+    ibm = {
+      source  = "ibm-cloud/ibm"
+      version = ">= 1.84.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 3.5.1"
+    }
+  }
 }
 
 locals {
@@ -14,14 +23,7 @@ locals {
 }
 
 provider "ibm" {
-  # 0.12.x syntax for provider version
-  version = ">= 1.84.0"
-  region  = local.region
-}
-
-provider "random" {
-  # 0.12.x syntax for provider version
-  version = ">= 3.5.1"
+  region = local.region
 }
 
 resource "random_string" "sfx" {
@@ -85,3 +87,22 @@ resource "ibm_iam_access_group_policy" "bucket_public_read" {
     resource_instance_id = ibm_resource_instance.cos.id
     # Apply to the specific bucket
     resource_type        = "bucket"
+    resource             = ibLbm_cos_bucket.site.bucket_name
+  }
+}
+
+
+# Upload the initial index.html
+# If var.initial_html is non-empty, use it; otherwise use the bundled sample file.
+locals {
+  initial_index_content = trim(var.initial_html) != "" ? var.initial_html : file("${path.module}/static-site/index.html")
+}
+
+resource "ibm_cos_bucket_object" "index" {
+  resource_instance_id = ibm_resource_instance.cos.id
+  bucket_crn           = ibm_cos_bucket.site.crn
+  key                  = "index.html"
+  content              = local.initial_index_content
+  content_type         = "text/html"
+  force                = true
+}

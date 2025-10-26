@@ -1,4 +1,56 @@
-= ["vibe", "vibe-ide", "static-site"]
+You're getting this error because the `main.tf` file is incomplete.
+
+The log shows the error is on `main.tf line 1: = ["vibe", "vibe-ide", "static-site"]`. [cite\_start]This line is the `tags` assignment from the *middle* of the original `main.tf` file[cite: 14], but it's now at the very top of the file, which is invalid syntax.
+
+This likely happened because my last response only provided the *snippet* of code to add, not the complete file. You must have replaced the entire contents of `main.tf` with that snippet.
+
+Here is the **complete, corrected `main.tf` file** with all the original code restored and our new public access policy included. Please use this to replace the content of your `main.tf`:
+
+```terraform
+terraform {
+  required_version = ">= 1.5.0"
+  required_providers = {
+    ibm = {
+      source  = "ibm-cloud/ibm"
+      version = ">= 1.84.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 3.5.1"
+    }
+  }
+}
+
+locals {
+  # Suffix for global-unique names;
+  # stable per workspace run.
+  suffix = lower(replace(random_string.sfx.result, "/[^a-z0-9]/", ""))
+  region = var.region
+  # Base names
+  cos_name    = "vibe-ide-cos-${local.suffix}"
+  bucket_name = "vibe-ide-bucket-${local.suffix}"
+}
+
+provider "ibm" {
+  region = local.region
+}
+
+resource "random_string" "sfx" {
+  length  = 6
+  upper   = false
+  numeric = true
+  special = false
+}
+
+# --------------------------
+# Cloud Object Storage (Lite)
+# --------------------------
+resource "ibm_resource_instance" "cos" {
+  name     = local.cos_name
+  service  = "cloud-object-storage"
+  plan     = var.cos_plan  # "lite" by default
+  location = "global"
+  tags     = ["vibe", "vibe-ide", "static-site"]
 }
 
 # Regional bucket for website hosting
@@ -10,13 +62,13 @@ resource "ibm_cos_bucket" "site" {
   force_delete         = true
 
   # Website hosting requires a website configuration attached below.
-# Public access is applied automatically via the
-# 'ibm_iam_access_group_policy' resource below.
+  # Public access is applied automatically via the
+  # 'ibm_iam_access_group_policy' resource below.
 }
 
 # Website configuration
 resource "ibm_cos_bucket_website" "site" {
-bucket_crn  = ibm_cos_bucket.site.crn
+  bucket_crn  = ibm_cos_bucket.site.crn
   index_doc   = "index.html"
   error_doc   = "index.html"
   # Note: website endpoint is available via the output below.
@@ -56,10 +108,11 @@ locals {
 }
 
 resource "ibm_cos_bucket_object" "index" {
-resource_instance_id = ibm_resource_instance.cos.id
+  resource_instance_id = ibm_resource_instance.cos.id
   bucket_crn           = ibm_cos_bucket.site.crn
   key                  = "index.html"
   content              = local.initial_index_content
   content_type         = "text/html"
   force                = true
 }
+```

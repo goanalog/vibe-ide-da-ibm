@@ -4,12 +4,19 @@ variable "region" {
   default     = "us-south"
 }
 
+variable "existing_cos_instance_id" {
+  description = "Optional: The ID of an existing COS instance to use. If empty, a new 'lite' plan instance will be created."
+  type        = string
+  default     = ""
+}
+
 variable "cos_plan" {
   description = "Cloud Object Storage plan (lite|standard). For 1A we default to lite."
   type        = string
   default     = "lite"
   validation {
     condition     = contains(["lite", "standard"], lower(var.cos_plan))
+    # This message is now a full sentence.
     error_message = "The cos_plan must be either 'lite' or 'standard'."
   }
 }
@@ -25,7 +32,8 @@ variable "bucket_storage_class" {
   type        = string
   default     = "smart"
   validation {
-    condition     = contains(["smart","standard","vault","cold","flex","archive"], lower(var.bucket_storage_class))
+    condition     = contains(["smart", "standard", "vault", "cold", "flex", "archive"], lower(var.bucket_storage_class))
+    # This message is now a full sentence.
     error_message = "The bucket_storage_class must be one of: smart, standard, vault, cold, flex, or archive."
   }
 }

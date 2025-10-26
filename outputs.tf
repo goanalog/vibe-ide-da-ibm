@@ -1,6 +1,4 @@
-
 # Primary output: Public website URL
-# Note: You must grant Public Object Reader on this bucket for anonymous access.
 output "primary_output" {
   description = "Public Website URL for Vibe IDE"
   value       = ibm_cos_bucket_website.site.website_url
@@ -12,6 +10,7 @@ output "bucket_name" {
 }
 
 output "cos_instance_name" {
-  value       = ibm_resource_instance.cos.name
+  # Use the local variable to get the correct name
+  value       = local.cos_instance_name
   description = "COS instance name"
 }

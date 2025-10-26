@@ -225,27 +225,21 @@
 <body>
     
     <div class="plex-container">
-        <!-- Static background grid --><div class="plex-layer grid-layer"></div>
+        <div class="plex-layer grid-layer"></div>
         
-        <!-- Animated horizontal lines --><div class="plex-layer h-lines-layer"></div>
+        <div class="plex-layer h-lines-layer"></div>
 
-        <!-- Animated diagonal lines --><div class="plex-layer d-lines-layer"></div>
+        <div class="plex-layer d-lines-layer"></div>
 
-        <!-- Subtle scanline overlay --><div class="plex-layer scanline-layer"></div>
+        <div class="plex-layer scanline-layer"></div>
     </div>
 
-    <!-- Optional content --><div class="content">
+    <div class="content">
         <div class="vibe-ide-title">
             <h1>Vibe IDE</h1>
         </div>
-        <p class="status">SYSTEM STATUS: <span class="online">OPERATIONAL</span><span class="cursor">_</span></p>
+        <p class="status">SYSTEM STATUS: <span class="online">${status_message}</span><span class="cursor">_</span></p>
     </div>
 
-    <!-- 
-      This page uses ZERO JavaScript.
-      The animation is created by stacking multiple <div> layers,
-      each with a CSS gradient background that is animated by
-      changing its 'background-position'.
-    --></body>
+    </body>
 </html>
-

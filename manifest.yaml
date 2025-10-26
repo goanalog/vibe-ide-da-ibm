@@ -1,4 +1,3 @@
-
 kind: deployableArchitecture
 metadata:
   name: vibe-ide-da
@@ -25,6 +24,12 @@ spec:
     - name: initial_html
       type: string
       description: Optional initial HTML to publish as index.html
+    # This new variable is recommended but not in your original file.
+    # Add this to your inputs list for the "lite plan" workaround:
+    - name: existing_cos_instance_id
+      type: string
+      description: Optional ID of an existing COS instance. If empty, a new 'lite' instance is created.
+      default: ""
   outputs:
     - name: primary_output
       description: Public Website URL for Vibe IDE

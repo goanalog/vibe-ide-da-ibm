@@ -20,27 +20,39 @@ resource "random_string" "sfx" {
 }
 
 # --------------------------
-# Cloud Object Storage (Lite)
+# Cloud Object Storage
 # --------------------------
+
+# Look up the existing instance if an ID was provided
+data "ibm_resource_instance" "existing_cos" {
+  count = var.existing_cos_instance_id != "" ? 1 : 0
+  id    = var.existing_cos_instance_id
+}
+
+# Create a new 'lite' instance ONLY if no existing ID was provided
 resource "ibm_resource_instance" "cos" {
+  count    = var.existing_cos_instance_id == "" ? 1 : 0 # <-- Conditional creation
   name     = local.cos_name
   service  = "cloud-object-storage"
-  plan     = var.cos_plan  # "lite" by default
+  plan     = var.cos_plan
   location = "global"
   tags     = ["vibe", "vibe-ide", "static-site"]
 }
 
+# Use a local variable to get the correct ID and Name from either the new or existing resource
+locals {
+  cos_instance_id   = var.existing_cos_instance_id != "" ? data.ibm_resource_instance.existing_cos[0].id : ibm_resource_instance.cos[0].id
+  cos_instance_name = var.existing_cos_instance_id != "" ? data.ibm_resource_instance.existing_cos[0].name : ibm_resource_instance.cos[0].name
+}
+
+
 # Regional bucket for website hosting
 resource "ibm_cos_bucket" "site" {
   bucket_name          = local.bucket_name
-  resource_instance_id = ibm_resource_instance.cos.id
+  resource_instance_id = local.cos_instance_id # <-- Use local
   region_location      = var.bucket_region
   storage_class        = var.bucket_storage_class
   force_delete         = true
-
-  # Website hosting requires a website configuration attached below.
-  # Public access is applied automatically via the
-  # 'ibm_iam_access_group_policy' resource below.
 }
 
 # Website configuration
@@ -48,7 +60,6 @@ resource "ibm_cos_bucket_website" "site" {
   bucket_crn  = ibm_cos_bucket.site.crn
   index_doc   = "index.html"
   error_doc   = "index.html"
-  # Note: website endpoint is available via the output below.
 }
 
 # --------------------------
@@ -61,7 +72,6 @@ data "ibm_iam_access_group" "public_access" {
 }
 
 # Apply the "Object Reader" role to the Public Access group
-# This makes the bucket contents readable by anyone
 resource "ibm_iam_access_group_policy" "bucket_public_read" {
   access_group_id = data.ibm_iam_access_group.public_access.id
   roles           = ["Object Reader"]
@@ -69,9 +79,7 @@ resource "ibm_iam_access_group_policy" "bucket_public_read" {
 
   resources {
     service              = "cloud-object-storage"
-    # Apply to the specific COS instance
-    resource_instance_id = ibm_resource_instance.cos.id
-    # Apply to the specific bucket
+    resource_instance_id = local.cos_instance_id # <-- Use local
     resource_type        = "bucket"
     resource             = ibm_cos_bucket.site.bucket_name
   }
@@ -81,11 +89,17 @@ resource "ibm_iam_access_group_policy" "bucket_public_read" {
 # Upload the initial index.html
 # If var.initial_html is non-empty, use it; otherwise use the bundled sample file.
 locals {
-  initial_index_content = trim(var.initial_html) != "" ? var.initial_html : file("${path.module}/static-site/index.html")
+  # Use templatefile to inject dynamic data into the sample HTML
+  template_content = templatefile("${path.module}/static-site/index.html.tftpl", {
+    # This creates the dynamic message for the "wow" factor
+    status_message = "DEPLOYED TO ${upper(var.bucket_region)} | BUCKET: ${ibm_cos_bucket.site.bucket_name}"
+  })
+
+  initial_index_content = trim(var.initial_html) != "" ? var.initial_html : local.template_content
 }
 
 resource "ibm_cos_bucket_object" "index" {
-  resource_instance_id = ibm_resource_instance.cos.id
+  resource_instance_id = local.cos_instance_id # <-- Use local
   bucket_crn           = ibm_cos_bucket.site.crn
   key                  = "index.html"
   content              = local.initial_index_content

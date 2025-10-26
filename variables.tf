@@ -1,4 +1,3 @@
-
 variable "region" {
   description = "IBM provider region for ancillary services (not COS instance)"
   type        = string
@@ -11,7 +10,7 @@ variable "cos_plan" {
   default     = "lite"
   validation {
     condition     = contains(["lite", "standard"], lower(var.cos_plan))
-    error_message = "cos_plan must be 'lite' or 'standard'."
+    error_message = "The cos_plan must be either 'lite' or 'standard'."
   }
 }
 
@@ -27,7 +26,7 @@ variable "bucket_storage_class" {
   default     = "smart"
   validation {
     condition     = contains(["smart","standard","vault","cold","flex","archive"], lower(var.bucket_storage_class))
-    error_message = "bucket_storage_class must be one of: smart, standard, vault, cold, flex, archive."
+    error_message = "The bucket_storage_class must be one of: smart, standard, vault, cold, flex, or archive."
   }
 }
 
@@ -35,7 +34,8 @@ variable "initial_html" {
   description = "Optional: Initial HTML to publish as index.html. Leave blank to use the bundled sample."
   type        = string
   default     = ""
-  # The Projects UI will pass this as a string; auto-escaped by HCL.
+  # The Projects UI will pass this as a string;
+  # auto-escaped by HCL.
 }
 
 # Optional context vars that we are not surfacing in outputs for 3A, but keeping for provenance/extensions.

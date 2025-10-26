@@ -1,6 +1,15 @@
 terraform {
-  # This version constraint is compatible with 0.12.x
-  required_version = "~> 0.12"
+  required_version = ">= 1.5.0"
+  required_providers = {
+    ibm = {
+      source  = "ibm-cloud/ibm"
+      version = ">= 1.84.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 3.5.1"
+    }
+  }
 }
 
 locals {
@@ -14,14 +23,7 @@ locals {
 }
 
 provider "ibm" {
-  # 0.12.x syntax for provider version
-  version = ">= 1.84.0"
-  region  = local.region
-}
-
-provider "random" {
-  # 0.12.x syntax for provider version
-  version = ">= 3.5.1"
+  region = local.region
 }
 
 resource "random_string" "sfx" {
@@ -47,7 +49,7 @@ resource "ibm_cos_bucket" "site" {
   bucket_name          = local.bucket_name
   resource_instance_id = ibm_resource_instance.cos.id
   region_location      = var.bucket_region
-  storage_class        = var.bucket_storage_.class
+  storage_class        = var.bucket_storage_class
   force_delete         = true
 
   # Website hosting requires a website configuration attached below.

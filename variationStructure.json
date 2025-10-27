@@ -1,0 +1,24 @@
+{
+  "variation_root": "variations",
+  "default": "base",
+  "variations": [
+    {
+      "name": "base",
+      "label": "Starter — Explore Sample Data",
+      "path": "base",
+      "description": "Deploy COS with sample CSVs and a live shareable Helper App powered by Code Engine. One-click experience to explore files in the bucket immediately after deploy."
+    },
+    {
+      "name": "cognos",
+      "label": "Analytics — Power BI & Cognos Ready",
+      "path": "cognos",
+      "description": "Prepare your Object Storage bucket with recommended structure and metadata to accelerate BI workloads. Enables fast binding into Cognos and other analytics tooling."
+    },
+    {
+      "name": "appconnect",
+      "label": "Integration — Data Flows & APIs",
+      "path": "appconnect",
+      "description": "Enable App Connect powered data flows and triggers. Automate ingestion from apps and services, and surface COS as an event source or API-driven storage layer."
+    }
+  ]
+}
